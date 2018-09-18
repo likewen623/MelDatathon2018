@@ -11,6 +11,8 @@
 #install and load required libraries
 #install.packages('data.table')
 library(data.table)
+library(R.utils)
+
 
 #tell R where it can find the data
 ScanOnFolderMaster <- 'D:/Desktop/MelbDatathon2018/Samp_0/ScanOnTransaction'

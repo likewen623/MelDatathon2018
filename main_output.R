@@ -28,11 +28,10 @@ ui <- dashboardPage(
   ),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Widgets", tabName = "widgets", icon = icon("th")),
-      menuItem("Widgets", tabName = "widgets", icon = icon("th")),
+      menuItem("Hours Comparison", tabName = "HoursComparison", icon = icon("hourglass-end")),
+      menuItem("Weekdays Analysis", tabName = "WeekdaysAnalysis", icon = icon("calendar")),
       menuItem("Realtime Traffic", tabName = "RealtimeTraffic", icon = icon("dashboard")),
-      menuItem("Source code", icon = icon("file-code-o"), 
-               href = "https://github.com/rstudio/shinydashboard/")
+      menuItem("Source code", icon = icon("file-code-o"), href = "https://github.com/likewen623/MelDatathon2018/")
     )
   ),
   dashboardBody(
@@ -55,57 +54,47 @@ ui <- dashboardPage(
                       plotOutput("p", height = 550, width = 550))
                 
               )
-              # fluidRow(
-              #   
-              #   # App title ----
-              #   titlePanel("Melbourne Traffic"),
-              #   
-              #   # Sidebar layout with a input and output definitions ----
-              #   sidebarLayout(
-              #     
-              #     
-              #     # Sidebar panel for inputs ----
-              #     sidebarPanel(
-              #       
-              #       # Input: Selector for choosing dataset ----
-              #       selectInput(inputId = "weekday",
-              #                   label = "Choose a day:",
-              #                   choices = c("Mon", "Tues", "Wed", "Thur", "Fri")),
-              #       
-              #       # Input: Numeric entry for number of obs to view ----
-              #       selectInput(inputId = "time",
-              #                   label = "Choose a time:",
-              #                   choices = c("0:00","1:00","2:00","3:00","4:00","5:00","6:00","7:00","8:00","9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"))
-              # 
-              #     ),
-              #     
-              #     # Main panel for displaying outputs ----
-              #     mainPanel(
-              #       
-              #       plotOutput(outputId = "p")
-              #       
-              #     )
-              #   )
-              # )##
       ),
+      tabItem(tabName = "HoursComparison",
+              fluidRow(
+                box(title = 'Please select weekday:',
+                    background = 'light-blue',
+                    selectInput(inputId = "hours_weekday",
+                                label = "Choose a day:",
+                                choices = c("Mon", "Tues", "Wed", "Thur", "Fri"))
+                    ),
+                box(title = "Hours Comparison", ggiraphOutput("hours", height = 550, width = 550))
+                
+              )
       
+      ),
       # Second tab content
-      tabItem(tabName = "widgets",
-              h2("Widgets tab content")
+      tabItem(tabName = "WeekdaysAnalysis",
+              fluidRow(
+                box(title = 'Please select time:',
+                    background = 'light-blue',
+                    selectInput(inputId = "weekdays_time",
+                                label = "Choose a time:",
+                                choices = c("0:00","1:00","2:00","3:00","4:00","5:00","6:00","7:00","8:00","9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"))
+                ),
+                box(title = "Weekdays Analysis", background = "light-blue", solidHeader = TRUE,
+                    ggiraphOutput("weekdays", height = 550, width = 850))
+                
+              )
+              
       )
     )
   )
 )
 
 server <- function(input, output) {
+  data.path = 'D:/Desktop/MelbDatathon2018/'
+  setwd(data.path)
+  traffic <- read.csv('melbourne_vehicle_traffic.exact.csv')
+  
   output$p <- renderPlot({
-    data.path = 'D:/Desktop/MelbDatathon2018/'
-    setwd(data.path)
-    
-    traffic <- read.csv('melbourne_vehicle_traffic.exact.csv')
     
     input_weekday = input$weekday
-    #input_time = paste0(as.character(input$time) + ':00')
     input_time = input$time
     
     traffic_new = traffic[traffic$weekday == input_weekday & traffic$time == input_time,]
@@ -121,6 +110,66 @@ server <- function(input, output) {
       theme(legend.position = "none")+   ##隐藏所有图例
       theme(axis.title = element_blank())+
       scale_color_gradient(low="darkblue", high="lightblue")
+  })
+  
+  output$hours <- renderggiraph({
+    input_weekday = input$hours_weekday
+    rose_weekday = data.frame('time'=NA, 'type'=NA, 'speed'=NA)
+    
+    traffic_new = traffic[traffic$weekday == input_weekday,]
+    dataset = traffic_new
+    
+    for (time in unique(dataset$time)){
+      dataset_using = dataset[dataset$time == time,]
+      new_row1 = c(time, 'min', round(min(dataset_using$mean_speed), 2))
+      new_row3 = c(time, 'max', round(max(dataset_using$mean_speed), 2))
+      rose_weekday = rbind(rose_weekday, new_row1)
+      rose_weekday = rbind(rose_weekday, new_row3)
+    }
+    
+    rose_weekday = rose_weekday[-1,]
+    
+    gg_plot <- ggplot(rose_weekday, aes(x=time, y=speed, fill=type, tooltip = speed, data_id = speed))+ #geom_bar(stat="identity")+
+      geom_bar_interactive(stat="identity")+
+      coord_polar()+
+      scale_fill_brewer(palette="Blues")+
+      theme_bw()+
+      theme(axis.text.y = element_blank()) +   ## 删去刻度标签
+      theme(axis.ticks = element_blank()) +   ## 删去刻度线
+      theme(panel.border = element_blank())
+   # gg_plot
+    
+    ggiraph(code = print(gg_plot))
+  })
+  
+  output$weekdays <- renderggiraph({
+    input_time = input$weekdays_time
+    rose_time = data.frame('weekday'=NA, 'type'=NA, 'speed'=NA)
+    
+    traffic_new = traffic[traffic$time == input_time,]
+    dataset = traffic_new
+    
+    for (weekday in unique(dataset$weekday)){
+      dataset_using = dataset[dataset$weekday == weekday,]
+      new_row1 = c(weekday, 'min', round(min(dataset_using$mean_speed), 2))
+      new_row3 = c(weekday, 'max', round(max(dataset_using$mean_speed), 2))
+      rose_time = rbind(rose_time, new_row1)
+      rose_time = rbind(rose_time, new_row3)  
+    }
+    
+    rose_time = rose_time[-1,]
+    
+    
+    gg_plot <- ggplot(rose_time, aes(x=weekday, y=speed, fill=type, tooltip = speed, data_id = speed))+ geom_bar(stat="identity")+
+      geom_bar_interactive(stat="identity")+
+      scale_fill_brewer(palette="Blues")+
+      theme_bw()+
+      theme(axis.text.y = element_blank()) +   ## 删去刻度标签
+      theme(axis.ticks = element_blank()) +   ## 删去刻度线
+      theme(panel.border = element_blank())
+    
+    ggiraph(ggobj = gg_plot)
+    
   })
 }
 

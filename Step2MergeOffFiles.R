@@ -11,6 +11,8 @@
 #install and load required libraries
 #install.packages('data.table')
 library(data.table)
+library(R.utils)
+
 
 #tell R where it can find the data
 ScanOnFolderMaster <- 'D:/Desktop/MelbDatathon2018/Samp_0/ScanOnTransaction'
@@ -32,7 +34,7 @@ cat("\nthere are", length(allFiles),'files')
 
 first <- TRUE
 count <- 0
-
+=
 #look at all the files
 myFiles <- offFiles
 
@@ -61,7 +63,7 @@ for (myOn in myFiles){
   
 }
 
-
+ 
 cat('\n there are ', format(nrow(allON),big.mark = ","),'rows')
 
 colnames(allON) <- c('Mode','BusinessDate','DateTime','CardID','CardType','VehicleID','ParentRoute','RouteID','StopID')
