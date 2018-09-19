@@ -1,6 +1,6 @@
 # MelbourneTraffic
 
-Melbourne Traffic is an is an intelligent and interactive system based on data science technology, providing suggestions and solutions for users. By application of this system, it might be much easier to get informed of the latest Melbourne city congestion situation and the real time driving speed of different roads.  
+Melbourne Traffic is an intelligent and interactive system based on data science technology, providing suggestions and solutions for users. By application of this system, it might be much easier to get informed of the latest Melbourne city congestion situation and the real time driving speed of different roads.  
 
 [link here](https://likewen623.shinyapps.io/melbournetraffic/)
 
